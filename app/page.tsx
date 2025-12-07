@@ -1,65 +1,114 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Search, Loader2 } from 'lucide-react';
+import { api } from '@/lib/api';
+import { ProductCard } from '@/components/ProductCard';
 
 export default function Home() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [localFavorites, setLocalFavorites] = useState<Set<string>>(new Set());
+  const queryClient = useQueryClient();
+
+  // Fetch all products
+  const { data: products = [], isLoading: isLoadingProducts } = useQuery({
+    queryKey: ['products'],
+    queryFn: api.getAllProducts,
+  });
+
+  // Fetch favorites to initialize local state
+  const { data: favoritesData = [] } = useQuery({
+    queryKey: ['favorites'],
+    queryFn: api.getFavorites,
+  });
+
+  // Initialize local favorites from server data
+  useEffect(() => {
+    if (favoritesData.length > 0) {
+      setLocalFavorites(new Set(favoritesData.map(p => p.id)));
+    }
+  }, [favoritesData]);
+
+  // Add favorites mutation
+  const addFavoritesMutation = useMutation({
+    mutationFn: (productIds: string[]) => api.addFavorites(productIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['favorites'] });
+    },
+  });
+
+  // Filter products based on search query
+  const filteredProducts = useMemo(() => {
+    if (!searchQuery.trim()) return products;
+    const query = searchQuery.toLowerCase();
+    return products.filter(product =>
+      product.name.toLowerCase().startsWith(query)
+    );
+  }, [products, searchQuery]);
+
+  const handleToggleFavorite = (productId: string) => {
+    const newFavorites = new Set(localFavorites);
+    
+    if (newFavorites.has(productId)) {
+      newFavorites.delete(productId);
+    } else {
+      newFavorites.add(productId);
+    }
+    
+    setLocalFavorites(newFavorites);
+    addFavoritesMutation.mutate(Array.from(newFavorites));
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mb-8">
+        <h1 className="mb-2 text-4xl font-bold text-zinc-900 dark:text-zinc-50">
+          Products
+        </h1>
+        <p className="text-lg text-zinc-600 dark:text-zinc-400">
+          Browse our collection and save your favorites
+        </p>
+      </div>
+
+      {/* Search Input */}
+      <div className="mb-8">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-400" />
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-lg border border-zinc-200 bg-white py-3 pl-10 pr-4 text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-500 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
+          />
+        </div>
+      </div>
+
+      {/* Products Grid */}
+      {isLoadingProducts ? (
+        <div className="flex min-h-[400px] items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
+        </div>
+      ) : filteredProducts.length === 0 ? (
+        <div className="flex min-h-[400px] flex-col items-center justify-center">
+          <div className="mb-4 text-6xl">📦</div>
+          <p className="text-lg text-zinc-600 dark:text-zinc-400">
+            {searchQuery ? 'No products found matching your search' : 'No products available'}
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+      ) : (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredProducts.map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              isFavorite={localFavorites.has(product.id)}
+              onToggleFavorite={handleToggleFavorite}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          ))}
         </div>
-      </main>
-    </div>
+      )}
+    </main>
   );
 }
