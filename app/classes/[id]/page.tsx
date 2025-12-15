@@ -2,18 +2,20 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Plus, Trash2, Loader2, Edit } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Loader2, Edit as EditIcon } from 'lucide-react';
 import { useClass } from '@/hooks/class';
 import {
-  useStudentsByClass,
-  useCreateStudentClass,
-  useBulkCreateStudentClasses,
-  useDeleteStudentClassByStudentAndClass,
-} from '@/hooks/student-class';
-import { AddStudentsToClassModal } from '@/components/AddStudentsToClassModal';
+  useEnrollmentsByClass,
+  useCreateEnrollment,
+  useUpdateEnrollment,
+  useDeleteEnrollment,
+} from '@/hooks/enrollment';
+import { EnrollmentModal } from '@/components/EnrollmentModal';
+import { EnrollmentForm } from '@/components/EnrollmentForm';
 import { ClassForm } from '@/components/ClassForm';
 import { useUpdateClass } from '@/hooks/class';
 import type { UpdateClassDto } from '@/types/class';
+import type { CreateEnrollmentDto, UpdateEnrollmentDto } from '@/types/enrollment';
 
 const STATUS_LABELS: Record<string, string> = {
   active: 'Đang hoạt động',
@@ -27,42 +29,58 @@ const STATUS_COLORS: Record<string, string> = {
   archived: 'bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-400',
 };
 
+const ENROLLMENT_STATUS_LABELS: Record<string, string> = {
+  active: 'Đang học',
+  reserved: 'Bảo lưu',
+  dropped: 'Nghỉ học',
+};
+
+const ENROLLMENT_STATUS_COLORS: Record<string, string> = {
+  active: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+  reserved: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
+  dropped: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
+};
+
 export default function ClassDetailPage() {
   const params = useParams();
   const router = useRouter();
   const classId = Number(params.id);
 
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isBulkAddModalOpen, setIsBulkAddModalOpen] = useState(false);
+  const [isEnrollmentModalOpen, setIsEnrollmentModalOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+  const [isEditEnrollmentOpen, setIsEditEnrollmentOpen] = useState(false);
+  const [selectedEnrollment, setSelectedEnrollment] = useState<number | null>(null);
 
   // Fetch class data
   const { data: classData, isLoading: isLoadingClass } = useClass(classId);
-  const { data: studentsInClass = [], isLoading: isLoadingStudents } = useStudentsByClass(classId);
+  const { data: enrollments = [], isLoading: isLoadingEnrollments } = useEnrollmentsByClass(classId);
 
   // Mutations
-  const createMutation = useCreateStudentClass();
-  const bulkCreateMutation = useBulkCreateStudentClasses();
-  const deleteMutation = useDeleteStudentClassByStudentAndClass();
+  const createEnrollmentMutation = useCreateEnrollment();
+  const updateEnrollmentMutation = useUpdateEnrollment();
+  const deleteEnrollmentMutation = useDeleteEnrollment();
   const updateMutation = useUpdateClass();
 
-  const handleAddStudent = async (studentIds: number[]) => {
-    if (studentIds.length === 1) {
-      await createMutation.mutateAsync({
-        studentId: studentIds[0],
-        classId,
-      });
-    } else {
-      await bulkCreateMutation.mutateAsync({
-        classId,
-        studentIds,
-      });
+  const handleAddEnrollment = async (data: CreateEnrollmentDto) => {
+    await createEnrollmentMutation.mutateAsync(data);
+  };
+
+  const handleEditEnrollment = (enrollmentId: number) => {
+    setSelectedEnrollment(enrollmentId);
+    setIsEditEnrollmentOpen(true);
+  };
+
+  const handleUpdateEnrollment = async (data: UpdateEnrollmentDto) => {
+    if (selectedEnrollment) {
+      await updateEnrollmentMutation.mutateAsync({ id: selectedEnrollment, data });
+      setIsEditEnrollmentOpen(false);
+      setSelectedEnrollment(null);
     }
   };
 
-  const handleRemoveStudent = (studentId: number) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa học sinh này khỏi lớp?')) {
-      deleteMutation.mutate({ studentId, classId });
+  const handleRemoveEnrollment = (enrollmentId: number) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa đăng ký học này?')) {
+      deleteEnrollmentMutation.mutate(enrollmentId);
     }
   };
 
@@ -78,7 +96,7 @@ export default function ClassDetailPage() {
     }).format(value);
   };
 
-  const formatDate = (dateString?: string) => {
+  const formatDate = (dateString?: string | null) => {
     if (!dateString) return '-';
     try {
       return new Date(dateString).toLocaleDateString('vi-VN');
@@ -109,7 +127,8 @@ export default function ClassDetailPage() {
     );
   }
 
-  const existingStudentIds = studentsInClass.map((sc) => sc.studentId);
+  const existingStudentIds = enrollments.map((e) => e.studentId);
+  const activeEnrollments = enrollments.filter((e) => e.status === 'active');
 
   return (
     <div className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -143,14 +162,14 @@ export default function ClassDetailPage() {
             onClick={() => setIsEditFormOpen(true)}
             className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
           >
-            <Edit className="h-4 w-4" />
+            <EditIcon className="h-4 w-4" />
             Chỉnh sửa
           </button>
         </div>
       </div>
 
       {/* Class Info Cards */}
-      <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
         <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
           <div className="text-sm text-zinc-600 dark:text-zinc-400">Học phí</div>
           <div className="mt-1 text-xl font-semibold text-zinc-900 dark:text-zinc-50">
@@ -158,9 +177,15 @@ export default function ClassDetailPage() {
           </div>
         </div>
         <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="text-sm text-zinc-600 dark:text-zinc-400">Số học sinh</div>
+          <div className="text-sm text-zinc-600 dark:text-zinc-400">Tổng số đăng ký</div>
           <div className="mt-1 text-xl font-semibold text-zinc-900 dark:text-zinc-50">
-            {studentsInClass.length}
+            {enrollments.length}
+          </div>
+        </div>
+        <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="text-sm text-zinc-600 dark:text-zinc-400">Đang học</div>
+          <div className="mt-1 text-xl font-semibold text-zinc-900 dark:text-zinc-50">
+            {activeEnrollments.length}
           </div>
         </div>
         <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
@@ -171,38 +196,29 @@ export default function ClassDetailPage() {
         </div>
       </div>
 
-      {/* Students Section */}
+      {/* Enrollments Section */}
       <div className="rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
         <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
           <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
-            Danh sách học sinh ({studentsInClass.length})
+            Danh sách đăng ký học ({enrollments.length})
           </h2>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
-            >
-              <Plus className="h-4 w-4" />
-              Thêm học sinh
-            </button>
-            <button
-              onClick={() => setIsBulkAddModalOpen(true)}
-              className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-            >
-              <Plus className="h-4 w-4" />
-              Thêm nhiều
-            </button>
-          </div>
+          <button
+            onClick={() => setIsEnrollmentModalOpen(true)}
+            className="flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          >
+            <Plus className="h-4 w-4" />
+            Đăng ký học sinh
+          </button>
         </div>
 
-        {isLoadingStudents ? (
+        {isLoadingEnrollments ? (
           <div className="flex min-h-[200px] items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
           </div>
-        ) : studentsInClass.length === 0 ? (
+        ) : enrollments.length === 0 ? (
           <div className="flex min-h-[200px] flex-col items-center justify-center py-12">
             <div className="mb-4 text-6xl">👨‍🎓</div>
-            <p className="text-lg text-zinc-600 dark:text-zinc-400">Chưa có học sinh nào trong lớp</p>
+            <p className="text-lg text-zinc-600 dark:text-zinc-400">Chưa có học sinh nào đăng ký</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -216,13 +232,16 @@ export default function ClassDetailPage() {
                     Họ tên
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Ngày sinh
+                    Ngày bắt đầu
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Phụ huynh
+                    Ngày kết thúc
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    SĐT
+                    Trạng thái
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    Giảm giá
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                     Thao tác
@@ -230,13 +249,13 @@ export default function ClassDetailPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                {studentsInClass.map((studentClass) => {
-                  const student = studentClass.student;
+                {enrollments.map((enrollment) => {
+                  const student = enrollment.student;
                   if (!student) return null;
 
                   return (
                     <tr
-                      key={studentClass.id}
+                      key={enrollment.id}
                       className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
                     >
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-zinc-900 dark:text-zinc-50">
@@ -246,27 +265,48 @@ export default function ClassDetailPage() {
                         {student.fullName}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400">
-                        {formatDate(student.dob)}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400">
-                        {student.parentName || '-'}
+                        {formatDate(enrollment.startDate)}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400">
-                        {student.parentPhone || '-'}
+                        {formatDate(enrollment.endDate)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${ENROLLMENT_STATUS_COLORS[enrollment.status]}`}
+                        >
+                          {ENROLLMENT_STATUS_LABELS[enrollment.status]}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400">
+                        {enrollment.specificDiscount ? `${enrollment.specificDiscount}%` : '-'}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                        <button
-                          onClick={() => handleRemoveStudent(student.id)}
-                          className="rounded-lg p-2 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-300"
-                          title="Xóa khỏi lớp"
-                          disabled={deleteMutation.isPending}
-                        >
-                          {deleteMutation.isPending ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </button>
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => handleEditEnrollment(enrollment.id)}
+                            className="rounded-lg p-2 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
+                            title="Chỉnh sửa"
+                            disabled={updateEnrollmentMutation.isPending}
+                          >
+                            {updateEnrollmentMutation.isPending && selectedEnrollment === enrollment.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <EditIcon className="h-4 w-4" />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleRemoveEnrollment(enrollment.id)}
+                            className="rounded-lg p-2 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20 dark:hover:text-red-300"
+                            title="Xóa đăng ký"
+                            disabled={deleteEnrollmentMutation.isPending}
+                          >
+                            {deleteEnrollmentMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -278,20 +318,22 @@ export default function ClassDetailPage() {
       </div>
 
       {/* Modals */}
-      <AddStudentsToClassModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onAdd={handleAddStudent}
+      <EnrollmentModal
+        isOpen={isEnrollmentModalOpen}
+        onClose={() => setIsEnrollmentModalOpen(false)}
+        onAdd={handleAddEnrollment}
         existingStudentIds={existingStudentIds}
-        isBulk={false}
+        defaultClassId={classId}
       />
 
-      <AddStudentsToClassModal
-        isOpen={isBulkAddModalOpen}
-        onClose={() => setIsBulkAddModalOpen(false)}
-        onAdd={handleAddStudent}
-        existingStudentIds={existingStudentIds}
-        isBulk={true}
+      <EnrollmentForm
+        enrollment={enrollments.find((e) => e.id === selectedEnrollment) || null}
+        isOpen={isEditEnrollmentOpen}
+        onClose={() => {
+          setIsEditEnrollmentOpen(false);
+          setSelectedEnrollment(null);
+        }}
+        onSubmit={handleUpdateEnrollment}
       />
 
       <ClassForm
@@ -303,4 +345,3 @@ export default function ClassDetailPage() {
     </div>
   );
 }
-

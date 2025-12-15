@@ -1,7 +1,7 @@
 import { productsApi } from './products';
 import { studentsApi } from './students';
 import { classesApi } from './classes';
-import { studentClassesApi } from './student-classes';
+import { enrollmentsApi } from './enrollments';
 
 /**
  * Unified API object that exports all API modules
@@ -17,10 +17,10 @@ export const api = {
   // Classes
   ...classesApi,
 
-  // Student Classes
-  ...studentClassesApi,
+  // Enrollments
+  ...enrollmentsApi,
 };
 
 // Also export individual API modules for more granular imports
-export { productsApi, studentsApi, classesApi, studentClassesApi };
+export { productsApi, studentsApi, classesApi, enrollmentsApi };
 
