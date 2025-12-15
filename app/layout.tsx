@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
-import { Navigation } from "@/components/Navigation";
+import { Sidebar } from "@/components/Sidebar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Evolit Store",
-  description: "Browse and save your favorite products",
+  title: "Evolit",
+  description: "Hệ thống quản lý học sinh",
 };
 
 export default function RootLayout({
@@ -30,8 +30,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-zinc-50 dark:bg-black`}
       >
         <Providers>
-          <Navigation />
-          {children}
+          <Sidebar />
+          <main className="ml-64">
+            {children}
+          </main>
         </Providers>
       </body>
     </html>

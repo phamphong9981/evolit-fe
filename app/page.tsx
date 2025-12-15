@@ -3,8 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, Loader2 } from 'lucide-react';
-import { api } from '@/lib/api';
-import { ProductCard } from '@/components/ProductCard';
+import { api } from '@/hooks/api';
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,19 +48,19 @@ export default function Home() {
 
   const handleToggleFavorite = (productId: string) => {
     const newFavorites = new Set(localFavorites);
-    
+
     if (newFavorites.has(productId)) {
       newFavorites.delete(productId);
     } else {
       newFavorites.add(productId);
     }
-    
+
     setLocalFavorites(newFavorites);
     addFavoritesMutation.mutate(Array.from(newFavorites));
   };
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
         <h1 className="mb-2 text-4xl font-bold text-zinc-900 dark:text-zinc-50">
           Products
@@ -85,30 +84,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Products Grid */}
-      {isLoadingProducts ? (
-        <div className="flex min-h-[400px] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-zinc-400" />
-        </div>
-      ) : filteredProducts.length === 0 ? (
-        <div className="flex min-h-[400px] flex-col items-center justify-center">
-          <div className="mb-4 text-6xl">📦</div>
-          <p className="text-lg text-zinc-600 dark:text-zinc-400">
-            {searchQuery ? 'No products found matching your search' : 'No products available'}
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              isFavorite={localFavorites.has(product.id)}
-              onToggleFavorite={handleToggleFavorite}
-            />
-          ))}
-        </div>
-      )}
-    </main>
+
+    </div>
   );
 }
