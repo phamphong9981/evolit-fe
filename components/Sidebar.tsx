@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Users, BookOpen } from 'lucide-react';
+import { Users, BookOpen, DollarSign } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function Sidebar() {
@@ -18,6 +18,11 @@ export function Sidebar() {
       href: '/classes',
       label: 'Quản lý lớp học',
       icon: BookOpen,
+    },
+    {
+      href: '/finance/tuition-periods',
+      label: 'Quản lý tài chính',
+      icon: DollarSign,
     },
   ];
 

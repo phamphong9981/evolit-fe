@@ -1,16 +1,19 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, Plus, Edit, Trash2, Loader2, Eye } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Loader2, Eye, ClipboardCheck } from 'lucide-react';
 import Link from 'next/link';
 import type { Class, CreateClassDto, UpdateClassDto, ClassStatus } from '@/types/class';
 import { ClassForm } from '@/components/ClassForm';
+import { AttendanceModal } from '@/components/AttendanceModal';
 import {
   useClasses,
   useCreateClass,
   useUpdateClass,
   useDeleteClass,
 } from '@/hooks/class';
+import { useSubmitAttendance } from '@/hooks/attendance';
+import type { StudentAttendanceDto } from '@/types/attendance';
 
 const STATUS_LABELS: Record<ClassStatus, string> = {
   active: 'Đang hoạt động',
@@ -29,6 +32,8 @@ export default function ClassesPage() {
   const [statusFilter, setStatusFilter] = useState<ClassStatus | 'all'>('all');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
+  const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
+  const [selectedClassForAttendance, setSelectedClassForAttendance] = useState<Class | null>(null);
 
   // Fetch all classes
   const { data: classes = [], isLoading } = useClasses();
@@ -37,6 +42,7 @@ export default function ClassesPage() {
   const createMutation = useCreateClass();
   const updateMutation = useUpdateClass();
   const deleteMutation = useDeleteClass();
+  const submitAttendanceMutation = useSubmitAttendance();
 
   // Filter classes based on search and status
   const displayedClasses = useMemo(() => {
@@ -85,6 +91,20 @@ export default function ClassesPage() {
       await createMutation.mutateAsync(data as CreateClassDto);
       setIsFormOpen(false);
     }
+  };
+
+  const handleOpenAttendance = (classItem: Class) => {
+    setSelectedClassForAttendance(classItem);
+    setIsAttendanceModalOpen(true);
+  };
+
+  const handleSubmitAttendance = async (date: string, students: StudentAttendanceDto[]) => {
+    if (!selectedClassForAttendance) return;
+    await submitAttendanceMutation.mutateAsync({
+      classId: selectedClassForAttendance.id,
+      date,
+      students,
+    });
   };
 
   const formatCurrency = (value: number) => {
@@ -179,7 +199,7 @@ export default function ClassesPage() {
                     Trạng thái
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Số học sinh
+                    Điểm danh
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                     Thao tác
@@ -208,8 +228,15 @@ export default function ClassesPage() {
                         {STATUS_LABELS[classItem.status]}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400">
-                      {classItem.enrollments?.length || 0}
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => handleOpenAttendance(classItem)}
+                        className="flex items-center gap-2 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                        title="Điểm danh"
+                      >
+                        <ClipboardCheck className="h-3.5 w-3.5" />
+                        Điểm danh
+                      </button>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                       <div className="flex justify-end gap-2">
@@ -258,6 +285,18 @@ export default function ClassesPage() {
           setSelectedClass(null);
         }}
         onSubmit={handleFormSubmit}
+      />
+
+      {/* Attendance Modal */}
+      <AttendanceModal
+        isOpen={isAttendanceModalOpen}
+        onClose={() => {
+          setIsAttendanceModalOpen(false);
+          setSelectedClassForAttendance(null);
+        }}
+        onSubmit={handleSubmitAttendance}
+        classId={selectedClassForAttendance?.id || 0}
+        className={selectedClassForAttendance?.name}
       />
     </div>
   );
