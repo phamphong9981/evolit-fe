@@ -18,6 +18,9 @@ export interface OrderItem {
     classId?: number | null;
     tuitionPeriodId?: number | null;
     amount: number;
+    vatRate?: number;
+    vatAmount?: number;
+    totalLineAmount?: number;
     type: 'TUITION' | 'MATERIAL' | 'ADJUSTMENT';
     note?: string | null;
     createdAt?: string;
@@ -42,6 +45,8 @@ export interface Order {
     payerName: string;
     payerPhone: string;
     totalAmount: number;
+    subTotal?: number;
+    taxTotal?: number;
     discountTotal: number;
     finalAmount: number;
     totalPaid: number;
@@ -58,6 +63,8 @@ export interface CreateOrderDto {
     payerName: string;
     payerPhone: string;
     totalAmount: number;
+    subTotal?: number;
+    taxTotal?: number;
     discountTotal?: number;
     finalAmount: number;
     status?: OrderStatus;

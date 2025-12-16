@@ -17,6 +17,7 @@ import {
     ChevronUp,
     User,
     BookOpen,
+    Plus,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useTuitionPeriod, useUpdateTuitionPeriodStatus } from '@/hooks/tuition-period';
@@ -24,6 +25,7 @@ import { useOrdersByPeriod, useConfirmPayment, useOrderItemsByOrder } from '@/ho
 import { useGenerateBilling } from '@/hooks/billing';
 import { GenerateBillingModal } from '@/components/GenerateBillingModal';
 import { ConfirmPaymentModal } from '@/components/ConfirmPaymentModal';
+import { CreateManualOrderItemModal } from '@/components/CreateManualOrderItemModal';
 import type { Order, OrderItem, ConfirmPaymentDto } from '@/types/order';
 import type { TuitionPeriodStatus } from '@/types/tuition-period';
 import type { GenerateBillingRequest, GenerateBillingResponse } from '@/types/billing';
@@ -198,21 +200,49 @@ function OrderCard({
                                                     : 'text-zinc-900 dark:text-zinc-50'
                                                     }`}
                                             >
-                                                {formatCurrency(item.amount)}
+                                                {formatCurrency(item.totalLineAmount ?? item.amount)}
                                             </div>
                                         </div>
+                                    </div>
+                                    <div className="mt-3 grid grid-cols-1 gap-2 text-xs text-zinc-600 dark:text-zinc-400 sm:grid-cols-3">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-medium text-zinc-900 dark:text-zinc-50">Tiền hàng:</span>
+                                            <span>{formatCurrency(item.amount)}</span>
+                                        </div>
+                                        {typeof item.vatRate !== 'undefined' && (
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium text-zinc-900 dark:text-zinc-50">VAT:</span>
+                                                <span>{item.vatRate}% ({formatCurrency(item.vatAmount ?? 0)})</span>
+                                            </div>
+                                        )}
+                                        {typeof item.totalLineAmount !== 'undefined' && (
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium text-zinc-900 dark:text-zinc-50">Tổng dòng:</span>
+                                                <span>{formatCurrency(item.totalLineAmount)}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}
                             {/* Order Summary */}
                             <div className="mt-4 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
-                                <div className="flex items-center justify-between border-b border-zinc-200 pb-2 dark:border-zinc-700">
-                                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                                        Tổng tiền:
-                                    </span>
-                                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                                        {formatCurrency(order.totalAmount)}
-                                    </span>
+                                <div className="grid grid-cols-1 gap-2 text-sm text-zinc-700 dark:text-zinc-300 sm:grid-cols-2">
+                                    <div className="flex items-center justify-between border-b border-zinc-200 pb-2 dark:border-zinc-700">
+                                        <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                                            Tiền hàng (chưa VAT):
+                                        </span>
+                                        <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                                            {formatCurrency(order.subTotal ?? order.totalAmount)}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center justify-between border-b border-zinc-200 pb-2 dark:border-zinc-700">
+                                        <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                                            VAT:
+                                        </span>
+                                        <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                                            {formatCurrency(order.taxTotal ?? 0)}
+                                        </span>
+                                    </div>
                                 </div>
                                 {order.discountTotal > 0 && (
                                     <div className="flex items-center justify-between border-b border-zinc-200 py-2 dark:border-zinc-700">
@@ -247,12 +277,13 @@ export default function TuitionPeriodDetailPage() {
     const [orderStatusFilter, setOrderStatusFilter] = useState<'all' | 'pending' | 'partial' | 'paid'>('all');
     const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [isManualOrderModalOpen, setIsManualOrderModalOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
 
     // Fetch data
     const { data: period, isLoading: isLoadingPeriod } = useTuitionPeriod(periodId);
-    const { data: orders = [], isLoading: isLoadingOrders } = useOrdersByPeriod(periodId);
+    const { data: orders = [], isLoading: isLoadingOrders, refetch: refetchOrders } = useOrdersByPeriod(periodId);
 
     // Mutations
     const generateBillingMutation = useGenerateBilling();
@@ -598,26 +629,35 @@ export default function TuitionPeriodDetailPage() {
                 <div className="p-6">
                     {activeTab === 'orders' && (
                         <div>
-                            {/* Filter */}
-                            <div className="mb-4 flex gap-2">
-                                {(['all', 'pending', 'partial', 'paid'] as const).map((status) => (
-                                    <button
-                                        key={status}
-                                        onClick={() => setOrderStatusFilter(status)}
-                                        className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${orderStatusFilter === status
-                                            ? 'bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900'
-                                            : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
-                                            }`}
-                                    >
-                                        {status === 'all'
-                                            ? 'Tất cả'
-                                            : status === 'pending'
-                                                ? 'Chưa đóng'
-                                                : status === 'partial'
-                                                    ? 'Đóng thiếu'
-                                                    : 'Đã đóng'}
-                                    </button>
-                                ))}
+                            {/* Filter & Action Bar */}
+                            <div className="mb-4 flex items-center justify-between gap-4">
+                                <div className="flex gap-2">
+                                    {(['all', 'pending', 'partial', 'paid'] as const).map((status) => (
+                                        <button
+                                            key={status}
+                                            onClick={() => setOrderStatusFilter(status)}
+                                            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${orderStatusFilter === status
+                                                ? 'bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900'
+                                                : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
+                                                }`}
+                                        >
+                                            {status === 'all'
+                                                ? 'Tất cả'
+                                                : status === 'pending'
+                                                    ? 'Chưa đóng'
+                                                    : status === 'partial'
+                                                        ? 'Đóng thiếu'
+                                                        : 'Đã đóng'}
+                                        </button>
+                                    ))}
+                                </div>
+                                <button
+                                    onClick={() => setIsManualOrderModalOpen(true)}
+                                    className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    Tạo hóa đơn lẻ
+                                </button>
                             </div>
 
                             {/* Orders List */}
@@ -694,7 +734,18 @@ export default function TuitionPeriodDetailPage() {
                 onSubmit={handleConfirmPayment}
                 order={selectedOrder}
             />
+
+            <CreateManualOrderItemModal
+                isOpen={isManualOrderModalOpen}
+                onClose={() => setIsManualOrderModalOpen(false)}
+                periodId={periodId}
+                periodName={period?.name || ''}
+                onSuccess={() => {
+                    refetchOrders();
+                }}
+            />
         </div>
     );
 }
+
 

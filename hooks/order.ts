@@ -116,3 +116,33 @@ export function useOrderItemsByOrder(orderId: number, enabled: boolean = true) {
   });
 }
 
+/**
+ * Hook để tạo order item
+ */
+export function useCreateOrderItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: {
+      orderId?: number;
+      studentId: number;
+      classId?: number | null;
+      tuitionPeriodId?: number | null;
+      amount?: number;
+      vatRate?: number;
+      vatAmount?: number;
+      totalLineAmount?: number;
+      type?: 'TUITION' | 'MATERIAL' | 'ADJUSTMENT';
+      note?: string;
+    }) => ordersApi.createOrderItem(data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['order-items'] });
+      if (variables.orderId) {
+        queryClient.invalidateQueries({ queryKey: ['order-items', 'order', variables.orderId] });
+        queryClient.invalidateQueries({ queryKey: ['orders', variables.orderId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+    },
+  });
+}
+

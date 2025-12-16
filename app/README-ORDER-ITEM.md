@@ -25,6 +25,9 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
     "classId": 5,
     "tuitionPeriodId": 12,
     "amount": 2000000,
+    "vatRate": 10,
+    "vatAmount": 200000,
+    "totalLineAmount": 2200000,
     "note": "Học phí Toán lớp 5A - Tháng 1/2024",
     "type": "TUITION",
     "createdAt": "2024-01-15T10:00:00Z",
@@ -52,6 +55,9 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
     "studentId": 10,
     "classId": 5,
     "amount": 2000000,
+    "vatRate": 10,
+    "vatAmount": 200000,
+    "totalLineAmount": 2200000,
     "type": "TUITION",
     "note": "Học phí Toán lớp 5A",
     ...
@@ -62,6 +68,9 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
     "studentId": 10,
     "classId": 6,
     "amount": 3000000,
+    "vatRate": 10,
+    "vatAmount": 300000,
+    "totalLineAmount": 3300000,
     "type": "TUITION",
     "note": "Học phí Văn lớp 5B",
     ...
@@ -71,6 +80,9 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
     "orderId": 1,
     "studentId": 10,
     "amount": -500000,
+    "vatRate": 0,
+    "vatAmount": 0,
+    "totalLineAmount": -500000,
     "type": "ADJUSTMENT",
     "note": "Khấu trừ số dư ví",
     ...
@@ -101,6 +113,9 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
     "studentId": 10,
     "classId": 5,
     "amount": 2000000,
+    "vatRate": 10,
+    "vatAmount": 200000,
+    "totalLineAmount": 2200000,
     "type": "TUITION",
     ...
   }
@@ -174,22 +189,25 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
 
 **Response (200 OK):**
 ```json
-{
-  "id": 1,
-  "orderId": 1,
-  "studentId": 10,
-  "classId": 5,
-  "tuitionPeriodId": 12,
-  "amount": 2000000,
-  "note": "Học phí Toán lớp 5A - Tháng 1/2024",
-  "type": "TUITION",
-  "createdAt": "2024-01-15T10:00:00Z",
-  "updatedAt": "2024-01-15T10:00:00Z",
-  "order": {...},
-  "student": {...},
-  "class": {...},
-  "tuitionPeriod": {...}
-}
+  {
+    "id": 1,
+    "orderId": 1,
+    "studentId": 10,
+    "classId": 5,
+    "tuitionPeriodId": 12,
+    "amount": 2000000,
+    "vatRate": 10,
+    "vatAmount": 200000,
+    "totalLineAmount": 2200000,
+    "note": "Học phí Toán lớp 5A - Tháng 1/2024",
+    "type": "TUITION",
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:00:00Z",
+    "order": {...},
+    "student": {...},
+    "class": {...},
+    "tuitionPeriod": {...}
+  }
 ```
 
 **Error Responses:**
@@ -212,22 +230,26 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
 **Request Body:**
 ```json
 {
-  "orderId": 1,
   "studentId": 10,
   "classId": 5,
   "tuitionPeriodId": 12,
   "amount": 2000000,
+  "vatRate": 10,
+  "vatAmount": 200000,
+  "totalLineAmount": 2200000,
   "type": "TUITION",
   "note": "Học phí Toán lớp 5A"
 }
 ```
 
 **Request Fields:**
-- `orderId` (number, required): ID của hóa đơn
 - `studentId` (number, required): ID của học sinh
 - `classId` (number, optional): ID của lớp (nullable cho ADJUSTMENT)
 - `tuitionPeriodId` (number, optional): ID của kỳ học phí
 - `amount` (number, required, min: 0): Số tiền (có thể âm cho ADJUSTMENT)
+- `vatRate` (number, optional, default: 0): Tỷ lệ VAT (ví dụ: 8 hoặc 10)
+- `vatAmount` (number, optional, default: 0): Số tiền VAT tính ra (amount * vatRate / 100)
+- `totalLineAmount` (number, optional, default: 0): Tổng dòng = amount + vatAmount
 - `type` (enum, required): Loại item
   - `TUITION`: Học phí
   - `MATERIAL`: Tài liệu
@@ -259,6 +281,9 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
     "studentId": 10,
     "classId": 5,
     "amount": 2000000,
+    "vatRate": 10,
+    "vatAmount": 200000,
+    "totalLineAmount": 2200000,
     "type": "TUITION",
     "note": "Học phí Toán lớp 5A"
   },
@@ -267,6 +292,9 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
     "studentId": 10,
     "classId": 6,
     "amount": 3000000,
+    "vatRate": 10,
+    "vatAmount": 300000,
+    "totalLineAmount": 3300000,
     "type": "TUITION",
     "note": "Học phí Văn lớp 5B"
   }
@@ -309,7 +337,10 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
 ```json
 {
   "note": "Cập nhật ghi chú",
-  "amount": 2500000
+  "amount": 2500000,
+  "vatRate": 10,
+  "vatAmount": 250000,
+  "totalLineAmount": 2750000
 }
 ```
 
@@ -346,6 +377,21 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
 ```
 
 ---
+
+## Order Item Fields
+
+### VAT Fields
+- **vatRate** (decimal 10,2): Tỷ lệ VAT (ví dụ: 8 hoặc 10)
+- **vatAmount** (decimal 15,2): Số tiền VAT = amount * vatRate / 100
+- **totalLineAmount** (decimal 15,2): Tổng dòng = amount + vatAmount
+
+### Calculation Example
+```
+amount = 1,000,000 VNĐ
+vatRate = 10%
+vatAmount = 1,000,000 * 10 / 100 = 100,000 VNĐ
+totalLineAmount = 1,000,000 + 100,000 = 1,100,000 VNĐ
+```
 
 ## Order Item Types
 

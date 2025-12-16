@@ -24,8 +24,10 @@ Controller quản lý hóa đơn (Orders) - đại diện cho một lần thanh 
     "payerPhone": "0901234567",
     "totalAmount": 5000000,
     "discountTotal": 0,
-    "finalAmount": 5000000,
+    "finalAmount": 5500000,
     "totalPaid": 3000000,
+    "taxTotal": 500000,
+    "subTotal": 5000000,
     "status": "partial",
     "createdBy": "admin",
     "note": "Học phí kỳ Tháng 1/2024",
@@ -75,22 +77,24 @@ Controller quản lý hóa đơn (Orders) - đại diện cho một lần thanh 
 
 **Response (200 OK):**
 ```json
-{
-  "id": 1,
-  "payerName": "Nguyễn Văn A",
-  "payerPhone": "0901234567",
-  "totalAmount": 5000000,
-  "discountTotal": 0,
-  "finalAmount": 5000000,
-  "totalPaid": 3000000,
-  "status": "partial",
-  "createdBy": "admin",
-  "note": "Học phí kỳ Tháng 1/2024",
-  "createdAt": "2024-01-15T10:00:00Z",
-  "updatedAt": "2024-01-15T10:00:00Z",
-  "items": [...],
-  "transactions": [...]
-}
+  {
+    "id": 1,
+    "payerName": "Nguyễn Văn A",
+    "payerPhone": "0901234567",
+    "totalAmount": 5000000,
+    "discountTotal": 0,
+    "finalAmount": 5500000,
+    "totalPaid": 3000000,
+    "taxTotal": 500000,
+    "subTotal": 5000000,
+    "status": "partial",
+    "createdBy": "admin",
+    "note": "Học phí kỳ Tháng 1/2024",
+    "createdAt": "2024-01-15T10:00:00Z",
+    "updatedAt": "2024-01-15T10:00:00Z",
+    "items": [...],
+    "transactions": [...]
+  }
 ```
 
 **Error Responses:**
@@ -117,7 +121,9 @@ Controller quản lý hóa đơn (Orders) - đại diện cho một lần thanh 
   "payerPhone": "0901234567",
   "totalAmount": 5000000,
   "discountTotal": 500000,
-  "finalAmount": 4500000,
+  "finalAmount": 4950000,
+  "taxTotal": 500000,
+  "subTotal": 5000000,
   "status": "pending",
   "createdBy": "admin",
   "note": "Học phí kỳ Tháng 1/2024"
@@ -220,14 +226,16 @@ Controller quản lý hóa đơn (Orders) - đại diện cho một lần thanh 
 
 **Response (200 OK):**
 ```json
-{
-  "id": 1,
-  "payerName": "Nguyễn Văn A",
-  "totalAmount": 5000000,
-  "finalAmount": 5000000,
-  "totalPaid": 5000000,
-  "status": "paid",
-  "transactions": [
+  {
+    "id": 1,
+    "payerName": "Nguyễn Văn A",
+    "totalAmount": 5000000,
+    "finalAmount": 5500000,
+    "totalPaid": 5500000,
+    "taxTotal": 500000,
+    "subTotal": 5000000,
+    "status": "paid",
+    "transactions": [
     {
       "id": 1,
       "amount": 3000000,
@@ -616,10 +624,25 @@ export const OrderDetailPage: React.FC<{ orderId: number }> = ({ orderId }) => {
 
 ---
 
+## Order Fields
+
+### Tax Fields
+- **taxTotal** (decimal 15,2): Tổng tiền thuế của tất cả các dòng (tổng vatAmount của tất cả items)
+- **subTotal** (decimal 15,2): Tổng tiền hàng chưa thuế (tổng amount của tất cả items)
+
+### Calculation Logic
+```
+subTotal = SUM(order_items.amount)
+taxTotal = SUM(order_items.vatAmount)
+totalAmount = subTotal + taxTotal (hoặc có thể khác tùy logic)
+finalAmount = totalAmount - discountTotal
+```
+
 ## Integration Notes
 
 1. **Payment Confirmation**: Luôn validate `amount > 0` trước khi gọi API
 2. **Overpayment**: Phần nộp thừa tự động chuyển vào ví, không cần xử lý thủ công
 3. **Multiple Payments**: Hỗ trợ thanh toán nhiều lần, status tự động cập nhật
 4. **Transaction Safety**: Sử dụng pessimistic locking, đảm bảo không bị double payment
+5. **VAT Calculation**: VAT được tính ở cấp OrderItem, taxTotal là tổng VAT của tất cả items
 

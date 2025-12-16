@@ -89,5 +89,31 @@ export const ordersApi = {
     if (!response.ok) throw new Error('Failed to fetch order items');
     return response.json();
   },
+
+  createOrderItem: async (data: {
+    orderId?: number;
+    studentId: number;
+    classId?: number | null;
+    tuitionPeriodId?: number | null;
+    amount?: number;
+    vatRate?: number;
+    vatAmount?: number;
+    totalLineAmount?: number;
+    type?: 'TUITION' | 'MATERIAL' | 'ADJUSTMENT';
+    note?: string;
+  }): Promise<OrderItem> => {
+    const response = await fetch(`${API_BASE_URL}/order-items`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Failed to create order item' }));
+      throw new Error(error.message || 'Failed to create order item');
+    }
+    return response.json();
+  },
 };
 
