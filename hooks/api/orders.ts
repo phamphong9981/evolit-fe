@@ -84,9 +84,36 @@ export const ordersApi = {
     }
   },
 
+  getAllOrderItems: async (): Promise<OrderItem[]> => {
+    const response = await fetch(`${API_BASE_URL}/order-items`);
+    if (!response.ok) throw new Error('Failed to fetch order items');
+    return response.json();
+  },
+
   getOrderItemsByOrder: async (orderId: number): Promise<OrderItem[]> => {
     const response = await fetch(`${API_BASE_URL}/order-items/by-order/${orderId}`);
     if (!response.ok) throw new Error('Failed to fetch order items');
+    return response.json();
+  },
+
+  getOrderItemsByStudent: async (params: { studentId?: number; code?: string; search?: string }): Promise<OrderItem[]> => {
+    const queryParams = new URLSearchParams();
+    if (params.search) {
+      queryParams.append('search', params.search);
+    } else if (params.code) {
+      queryParams.append('code', params.code);
+    } else if (params.studentId) {
+      queryParams.append('studentId', params.studentId.toString());
+    }
+
+    const response = await fetch(`${API_BASE_URL}/order-items/by-student?${queryParams.toString()}`);
+    if (!response.ok) throw new Error('Failed to fetch order items by student');
+    return response.json();
+  },
+
+  getOrderItemsByClass: async (classId: number): Promise<OrderItem[]> => {
+    const response = await fetch(`${API_BASE_URL}/order-items/by-class/${classId}`);
+    if (!response.ok) throw new Error('Failed to fetch order items by class');
     return response.json();
   },
 

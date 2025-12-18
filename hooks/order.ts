@@ -106,6 +106,17 @@ export function useDeleteOrder() {
 }
 
 /**
+ * Hook để lấy tất cả order items
+ */
+export function useAllOrderItems(enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['order-items', 'all'],
+    queryFn: () => ordersApi.getAllOrderItems(),
+    enabled,
+  });
+}
+
+/**
  * Hook để lấy danh sách order items của một order
  */
 export function useOrderItemsByOrder(orderId: number, enabled: boolean = true) {
@@ -113,6 +124,28 @@ export function useOrderItemsByOrder(orderId: number, enabled: boolean = true) {
     queryKey: ['order-items', 'order', orderId],
     queryFn: () => ordersApi.getOrderItemsByOrder(orderId),
     enabled: enabled && !!orderId,
+  });
+}
+
+/**
+ * Hook để lấy danh sách order items theo học sinh (theo studentId, code, hoặc search)
+ */
+export function useOrderItemsByStudent(params: { studentId?: number; code?: string; search?: string }, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['order-items', 'by-student', params.studentId, params.code, params.search],
+    queryFn: () => ordersApi.getOrderItemsByStudent(params),
+    enabled: enabled,
+  });
+}
+
+/**
+ * Hook để lấy danh sách order items theo lớp
+ */
+export function useOrderItemsByClass(classId: number, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['order-items', 'by-class', classId],
+    queryFn: () => ordersApi.getOrderItemsByClass(classId),
+    enabled: enabled && !!classId,
   });
 }
 

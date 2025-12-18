@@ -21,6 +21,9 @@ export interface OrderItem {
     vatRate?: number;
     vatAmount?: number;
     totalLineAmount?: number;
+    paidAmount?: number; // Số tiền đã thanh toán cho item này
+    remainingAmount?: number; // Số tiền còn nợ (computed, luôn có trong API response)
+    isFullyPaid?: boolean; // Đã thanh toán đủ chưa (computed, luôn có trong API response)
     type: 'TUITION' | 'MATERIAL' | 'ADJUSTMENT';
     note?: string | null;
     createdAt?: string;
@@ -29,6 +32,7 @@ export interface OrderItem {
         id: number;
         fullName: string;
         code: string;
+        parentPhone?: string;
     };
     class?: {
         id: number;
@@ -82,5 +86,19 @@ export interface ConfirmPaymentDto {
     amount: number;
     method: 'CASH' | 'BANK_TRANSFER';
     evidence?: string;
+}
+
+// Transaction API Types
+export interface CreateTransactionDto {
+    orderId: number;
+    totalAmount: number;
+    paymentMethod?: 'CASH' | 'BANK_TRANSFER';
+    evidenceImage?: string;
+    allocations?: TransactionAllocationDto[];
+}
+
+export interface TransactionAllocationDto {
+    orderItemId: number;
+    amount: number;
 }
 

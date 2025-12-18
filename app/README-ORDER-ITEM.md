@@ -28,6 +28,9 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
     "vatRate": 10,
     "vatAmount": 200000,
     "totalLineAmount": 2200000,
+    "paidAmount": 0,
+    "remainingAmount": 2200000,
+    "isFullyPaid": false,
     "note": "Học phí Toán lớp 5A - Tháng 1/2024",
     "type": "TUITION",
     "createdAt": "2024-01-15T10:00:00Z",
@@ -58,6 +61,9 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
     "vatRate": 10,
     "vatAmount": 200000,
     "totalLineAmount": 2200000,
+    "paidAmount": 1000000,
+    "remainingAmount": 1200000,
+    "isFullyPaid": false,
     "type": "TUITION",
     "note": "Học phí Toán lớp 5A",
     ...
@@ -71,6 +77,9 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
     "vatRate": 10,
     "vatAmount": 300000,
     "totalLineAmount": 3300000,
+    "paidAmount": 3300000,
+    "remainingAmount": 0,
+    "isFullyPaid": true,
     "type": "TUITION",
     "note": "Học phí Văn lớp 5B",
     ...
@@ -83,6 +92,9 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
     "vatRate": 0,
     "vatAmount": 0,
     "totalLineAmount": -500000,
+    "paidAmount": 0,
+    "remainingAmount": 0,
+    "isFullyPaid": true,
     "type": "ADJUSTMENT",
     "note": "Khấu trừ số dư ví",
     ...
@@ -99,10 +111,35 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
 ### 3. Get Order Items by Student
 **Lấy tất cả items của một học sinh**
 
-#### `GET /order-items/by-student/:studentId`
+#### `GET /order-items/by-student`
 
-**Path Parameters:**
-- `studentId` (number): ID của học sinh
+**Query Parameters:**
+- `studentId` (number, optional): ID của học sinh (tìm chính xác)
+- `code` (string, optional): Mã học sinh (tìm chính xác)
+- `search` (string, optional): Tìm kiếm gần đúng (like) theo:
+  - Tên học sinh (`fullName`)
+  - Mã học sinh (`code`)
+  - Số điện thoại phụ huynh (`parentPhone`)
+
+**Lưu ý:** Phải cung cấp ít nhất một trong ba tham số (`studentId`, `code`, hoặc `search`).
+
+**Examples:**
+```bash
+# Tìm theo studentId (chính xác)
+GET /order-items/by-student?studentId=10
+
+# Tìm theo code (chính xác)
+GET /order-items/by-student?code=ST001
+
+# Tìm kiếm like theo tên học sinh
+GET /order-items/by-student?search=Nguyễn
+
+# Tìm kiếm like theo mã học sinh
+GET /order-items/by-student?search=ST00
+
+# Tìm kiếm like theo số điện thoại phụ huynh
+GET /order-items/by-student?search=0912345678
+```
 
 **Response (200 OK):**
 ```json
@@ -116,15 +153,53 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
     "vatRate": 10,
     "vatAmount": 200000,
     "totalLineAmount": 2200000,
+    "paidAmount": 1000000,
+    "remainingAmount": 1200000,
+    "isFullyPaid": false,
     "type": "TUITION",
-    ...
+    "order": { ... },
+    "class": { ... },
+    "student": {
+      "id": 10,
+      "code": "ST001",
+      "fullName": "Nguyễn Văn A",
+      "parentPhone": "0912345678",
+      ...
+    }
   }
 ]
+```
+
+**Lưu ý về tìm kiếm:**
+- Khi dùng `search`, API sẽ tìm kiếm không phân biệt hoa thường (case-insensitive)
+- Tìm kiếm theo pattern `LIKE '%search%'` (chứa chuỗi tìm kiếm)
+- Kết quả sẽ bao gồm relation `student` để hiển thị thông tin học sinh
+- Ưu tiên: Nếu có `search`, sẽ dùng tìm kiếm like; nếu có `code`, tìm chính xác theo code; nếu có `studentId`, tìm chính xác theo ID
+
+**Error Responses:**
+
+**400 Bad Request:**
+```json
+{
+  "statusCode": 400,
+  "message": "Either studentId, code, or search must be provided"
+}
+```
+
+**404 Not Found:**
+```json
+{
+  "statusCode": 404,
+  "message": "Student with code ST999 not found"
+}
 ```
 
 **Use Case:**
 - Xem lịch sử học phí của một học sinh
 - Thống kê doanh thu theo học sinh
+- Tìm kiếm theo mã học sinh khi không biết ID
+- Tìm kiếm linh hoạt theo tên, mã, hoặc số điện thoại phụ huynh
+- Tìm tất cả order items của các học sinh có tên chứa từ khóa
 
 ---
 
@@ -199,6 +274,9 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
     "vatRate": 10,
     "vatAmount": 200000,
     "totalLineAmount": 2200000,
+    "paidAmount": 1000000,
+    "remainingAmount": 1200000,
+    "isFullyPaid": false,
     "note": "Học phí Toán lớp 5A - Tháng 1/2024",
     "type": "TUITION",
     "createdAt": "2024-01-15T10:00:00Z",
@@ -230,6 +308,7 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
 **Request Body:**
 ```json
 {
+  "orderId": 1,
   "studentId": 10,
   "classId": 5,
   "tuitionPeriodId": 12,
@@ -243,6 +322,7 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
 ```
 
 **Request Fields:**
+- `orderId` (number, required): ID của hóa đơn
 - `studentId` (number, required): ID của học sinh
 - `classId` (number, optional): ID của lớp (nullable cho ADJUSTMENT)
 - `tuitionPeriodId` (number, optional): ID của kỳ học phí
@@ -380,6 +460,18 @@ Controller quản lý chi tiết hóa đơn (Order Items) - các dòng item tron
 
 ## Order Item Fields
 
+### Payment Tracking Fields
+- **paidAmount** (decimal 14,2): Số tiền đã thanh toán cho item này. Tự động cập nhật khi có transaction.
+- **remainingAmount** (computed, number): Số tiền còn nợ = `totalLineAmount - paidAmount`. 
+  - Nếu `totalLineAmount < 0` (ADJUSTMENT trừ ví), luôn trả về `0`.
+  - Được tính tự động bởi getter, không lưu trong database.
+  - **Luôn có trong API response.**
+- **isFullyPaid** (computed, boolean): Kiểm tra item đã thanh toán xong chưa.
+  - Nếu `totalLineAmount < 0`, luôn trả về `true`.
+  - Ngược lại: `paidAmount >= totalLineAmount`.
+  - Được tính tự động bởi getter, không lưu trong database.
+  - **Luôn có trong API response.**
+
 ### VAT Fields
 - **vatRate** (decimal 10,2): Tỷ lệ VAT (ví dụ: 8 hoặc 10)
 - **vatAmount** (decimal 15,2): Số tiền VAT = amount * vatRate / 100
@@ -391,6 +483,9 @@ amount = 1,000,000 VNĐ
 vatRate = 10%
 vatAmount = 1,000,000 * 10 / 100 = 100,000 VNĐ
 totalLineAmount = 1,000,000 + 100,000 = 1,100,000 VNĐ
+paidAmount = 500,000 VNĐ (đã thanh toán một phần)
+remainingAmount = 1,100,000 - 500,000 = 600,000 VNĐ (tự động tính)
+isFullyPaid = false (tự động tính)
 ```
 
 ## Order Item Types
@@ -452,6 +547,7 @@ totalLineAmount = 1,000,000 + 100,000 = 1,100,000 VNĐ
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  Lịch sử học phí - Nguyễn Văn A                        │
+│  [Tìm kiếm: ___________] [Tìm]                          │
 ├─────────────────────────────────────────────────────────┤
 │  Ngày        | Lớp        | Loại      | Số tiền        │
 ├─────────────────────────────────────────────────────────┤
@@ -460,6 +556,11 @@ totalLineAmount = 1,000,000 + 100,000 = 1,100,000 VNĐ
 │  20/01/2024  | Toán 5A    | Tài liệu  | 200,000        │
 └─────────────────────────────────────────────────────────┘
 ```
+
+**Features:**
+- Tìm kiếm theo tên, mã học sinh, hoặc số điện thoại phụ huynh
+- Kết quả hiển thị thông tin học sinh đầy đủ
+- Hỗ trợ tìm kiếm gần đúng (fuzzy search)
 
 ### 3. Class Revenue Report
 
@@ -490,6 +591,10 @@ interface OrderItem {
   studentId: number;
   classId?: number;
   amount: number;
+  totalLineAmount: number;
+  paidAmount: number;
+  remainingAmount: number; // Computed getter, always present in response
+  isFullyPaid: boolean; // Computed getter, always present in response
   type: 'TUITION' | 'MATERIAL' | 'ADJUSTMENT';
   note?: string;
   student?: { fullName: string };
@@ -504,7 +609,9 @@ export const OrderItemsList: React.FC<{ orderId: number }> = ({ orderId }) => {
 
   if (isLoading) return <div>Loading...</div>;
 
-  const total = items?.reduce((sum, item) => sum + item.amount, 0) || 0;
+  const total = items?.reduce((sum, item) => sum + item.totalLineAmount, 0) || 0;
+  const totalPaid = items?.reduce((sum, item) => sum + item.paidAmount, 0) || 0;
+  const totalRemaining = items?.reduce((sum, item) => sum + item.remainingAmount, 0) || 0;
 
   const getTypeLabel = (type: string) => {
     switch (type) {
@@ -538,7 +645,10 @@ export const OrderItemsList: React.FC<{ orderId: number }> = ({ orderId }) => {
               <th className="text-left py-2">Học sinh</th>
               <th className="text-left py-2">Lớp</th>
               <th className="text-left py-2">Loại</th>
-              <th className="text-right py-2">Số tiền</th>
+              <th className="text-right py-2">Tổng tiền</th>
+              <th className="text-right py-2">Đã thanh toán</th>
+              <th className="text-right py-2">Còn nợ</th>
+              <th className="text-center py-2">Trạng thái</th>
               <th className="text-left py-2">Ghi chú</th>
             </tr>
           </thead>
@@ -551,7 +661,26 @@ export const OrderItemsList: React.FC<{ orderId: number }> = ({ orderId }) => {
                   {getTypeLabel(item.type)}
                 </td>
                 <td className="text-right py-2">
-                  {item.amount.toLocaleString('vi-VN')} VNĐ
+                  {item.totalLineAmount.toLocaleString('vi-VN')} VNĐ
+                </td>
+                <td className="text-right py-2">
+                  {item.paidAmount.toLocaleString('vi-VN')} VNĐ
+                </td>
+                <td className="text-right py-2">
+                  <span className={item.remainingAmount > 0 ? 'text-red-600 font-semibold' : 'text-green-600'}>
+                    {item.remainingAmount.toLocaleString('vi-VN')} VNĐ
+                  </span>
+                </td>
+                <td className="text-center py-2">
+                  {item.isFullyPaid ? (
+                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">
+                      Đã thanh toán
+                    </span>
+                  ) : (
+                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">
+                      Chưa đủ
+                    </span>
+                  )}
                 </td>
                 <td className="py-2 text-sm text-gray-500">{item.note || '-'}</td>
               </tr>
@@ -565,7 +694,15 @@ export const OrderItemsList: React.FC<{ orderId: number }> = ({ orderId }) => {
               <td className="text-right py-2">
                 {total.toLocaleString('vi-VN')} VNĐ
               </td>
-              <td></td>
+              <td className="text-right py-2">
+                {totalPaid.toLocaleString('vi-VN')} VNĐ
+              </td>
+              <td className="text-right py-2">
+                <span className={totalRemaining > 0 ? 'text-red-600' : 'text-green-600'}>
+                  {totalRemaining.toLocaleString('vi-VN')} VNĐ
+                </span>
+              </td>
+              <td colSpan={2}></td>
             </tr>
           </tfoot>
         </table>
@@ -583,4 +720,12 @@ export const OrderItemsList: React.FC<{ orderId: number }> = ({ orderId }) => {
 2. **Negative Amounts**: ADJUSTMENT có thể có amount âm (khấu trừ)
 3. **ClassId Nullable**: ADJUSTMENT và MATERIAL có thể không có classId
 4. **Bulk Create**: Sử dụng bulk create khi tạo nhiều items để tối ưu performance
+5. **Payment Tracking**: Sử dụng `remainingAmount` và `isFullyPaid` từ API response để hiển thị trạng thái thanh toán, không cần tính toán phía client. Các trường này luôn có trong mọi response.
+6. **Student Search**: Có thể tìm order items theo:
+   - `studentId` (tìm chính xác theo ID)
+   - `code` (tìm chính xác theo mã học sinh)
+   - `search` (tìm kiếm like theo tên, mã, hoặc số điện thoại phụ huynh - không phân biệt hoa thường)
+   - Ưu tiên: `search` > `code` > `studentId`
+7. **Auto Order Creation**: Khi tạo item không có `orderId`, hệ thống tự động tìm hoặc tạo Order mới, giúp đơn giản hóa workflow
+8. **Auto VAT Calculation**: Nếu không cung cấp `vatAmount` và `totalLineAmount`, hệ thống sẽ tự tính dựa trên `amount` và `vatRate`
 

@@ -100,6 +100,11 @@ export function CreateManualOrderItemModal({
             return;
         }
 
+        if (!selectedClass) {
+            setError('Vui lòng chọn lớp');
+            return;
+        }
+
         if (!amount || amount <= 0) {
             setError('Vui lòng nhập số tiền > 0');
             return;
@@ -141,8 +146,8 @@ export function CreateManualOrderItemModal({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="relative w-full max-w-2xl rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-900">
-                <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
+            <div className="relative w-full max-w-2xl max-h-[90vh] rounded-lg border border-zinc-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-900 flex flex-col">
+                <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4 dark:border-zinc-800 shrink-0">
                     <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
                         Tạo Order Item
                     </h2>
@@ -154,7 +159,7 @@ export function CreateManualOrderItemModal({
                     </button>
                 </div>
 
-                <div className="p-6">
+                <div className="flex-1 overflow-y-auto p-6">
                     {error && (
                         <div className="mb-4 flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
                             <AlertCircle className="h-5 w-5 shrink-0" />
@@ -257,10 +262,10 @@ export function CreateManualOrderItemModal({
                             )}
                         </div>
 
-                        {/* Class Selection (optional) */}
+                        {/* Class Selection */}
                         <div>
                             <label className="mb-2 block text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                                Chọn lớp (tuỳ chọn)
+                                Chọn lớp <span className="text-red-500">*</span>
                             </label>
                             {isLoadingClasses ? (
                                 <div className="flex items-center justify-center py-4">
@@ -274,6 +279,7 @@ export function CreateManualOrderItemModal({
                                         const class_ = classes.find((c) => c.id === classId);
                                         setSelectedClass(class_ || null);
                                     }}
+                                    required
                                     className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-zinc-900 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus:ring-zinc-700 dark:disabled:bg-zinc-900 dark:disabled:text-zinc-400"
                                 >
                                     <option value="">-- Chọn lớp --</option>
@@ -386,8 +392,10 @@ export function CreateManualOrderItemModal({
                             />
                         </div>
                     </div>
+                </div>
 
-                    <div className="mt-6 flex justify-end gap-3">
+                <div className="border-t border-zinc-200 px-6 py-4 dark:border-zinc-800 shrink-0">
+                    <div className="flex justify-end gap-3">
                         <button
                             type="button"
                             onClick={handleClose}
@@ -397,7 +405,7 @@ export function CreateManualOrderItemModal({
                         </button>
                         <button
                             onClick={handleSubmit}
-                            disabled={createOrderItemMutation.isPending || !selectedStudent || !amount || amount <= 0}
+                            disabled={createOrderItemMutation.isPending || !selectedStudent || !selectedClass || !amount || amount <= 0}
                             className="rounded-lg bg-zinc-900 px-6 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
                         >
                             {createOrderItemMutation.isPending ? (
