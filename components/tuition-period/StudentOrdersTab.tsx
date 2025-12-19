@@ -327,80 +327,88 @@ export function StudentOrdersTab({ formatCurrency, onItemPaymentClick }: Student
                     <p>Không tìm thấy kết quả</p>
                 </div>
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-                    <table className="w-full">
-                        <thead className="bg-zinc-50 dark:bg-zinc-900/50">
-                            <tr>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                                    Tên học sinh
-                                </th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                                    Mã học sinh
-                                </th>
-                                <th className="px-4 py-3 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                                    Tên lớp
-                                </th>
-                                <th className="px-4 py-3 text-right text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                                    Tổng tiền
-                                </th>
-                                <th className="px-4 py-3 text-right text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                                    Đã đóng
-                                </th>
-                                <th className="px-4 py-3 text-right text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                                    Còn nợ
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                            {tableRows.map((row) => (
-                                <tr
-                                    key={row.key}
-                                    onClick={() => setSelectedRowKey(row.key)}
-                                    className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
-                                >
-                                    <td className="px-4 py-3 text-sm text-zinc-900 dark:text-zinc-50">
-                                        {row.studentName}
-                                    </td>
-                                    <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">
-                                        {row.studentCode}
-                                    </td>
-                                    <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">
-                                        {row.className}
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                                        {formatCurrency(row.totalAmount)}
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-sm text-green-600 dark:text-green-400">
-                                        {formatCurrency(row.totalPaid)}
-                                    </td>
-                                    <td className={`px-4 py-3 text-right text-sm font-semibold ${row.totalRemaining > 0
-                                        ? 'text-orange-600 dark:text-orange-400'
-                                        : 'text-green-600 dark:text-green-400'
-                                        }`}>
-                                        {formatCurrency(row.totalRemaining)}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
+                <div className="rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+                    <div className="overflow-x-auto">
+                        <div className="relative max-h-[600px] overflow-y-auto">
+                            <table className="w-full border-collapse">
+                                <thead className="sticky top-0 z-10 bg-zinc-50 dark:bg-zinc-900/50">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                                            Tên học sinh
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                                            Mã học sinh
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                                            Tên lớp
+                                        </th>
+                                        <th className="px-4 py-3 text-right text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                                            Tổng tiền
+                                        </th>
+                                        <th className="px-4 py-3 text-right text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                                            Đã đóng
+                                        </th>
+                                        <th className="px-4 py-3 text-right text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                                            Còn nợ
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                                    {tableRows.map((row) => (
+                                        <tr
+                                            key={row.key}
+                                            onClick={() => setSelectedRowKey(row.key)}
+                                            className="cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+                                        >
+                                            <td className="px-4 py-3 text-sm text-zinc-900 dark:text-zinc-50">
+                                                {row.studentName}
+                                            </td>
+                                            <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">
+                                                {row.studentCode}
+                                            </td>
+                                            <td className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">
+                                                {row.className}
+                                            </td>
+                                            <td className="px-4 py-3 text-right text-sm font-medium text-zinc-900 dark:text-zinc-50">
+                                                {formatCurrency(row.totalAmount)}
+                                            </td>
+                                            <td className="px-4 py-3 text-right text-sm text-green-600 dark:text-green-400">
+                                                {formatCurrency(row.totalPaid)}
+                                            </td>
+                                            <td className={`px-4 py-3 text-right text-sm font-semibold ${row.totalRemaining > 0
+                                                ? 'text-orange-600 dark:text-orange-400'
+                                                : 'text-green-600 dark:text-green-400'
+                                                }`}>
+                                                {formatCurrency(row.totalRemaining)}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                         {tableRows.length > 0 && (
-                            <tfoot className="bg-zinc-50 dark:bg-zinc-900/50">
-                                <tr>
-                                    <td colSpan={3} className="px-4 py-3 text-right text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                                        Tổng cộng:
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                                        {formatCurrency(tableRows.reduce((sum, row) => sum + row.totalAmount, 0))}
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-sm font-semibold text-green-600 dark:text-green-400">
-                                        {formatCurrency(tableRows.reduce((sum, row) => sum + row.totalPaid, 0))}
-                                    </td>
-                                    <td className="px-4 py-3 text-right text-sm font-semibold text-orange-600 dark:text-orange-400">
-                                        {formatCurrency(tableRows.reduce((sum, row) => sum + row.totalRemaining, 0))}
-                                    </td>
-                                </tr>
-                            </tfoot>
+                            <div className="border-t border-zinc-200 dark:border-zinc-800">
+                                <table className="w-full border-collapse">
+                                    <tfoot className="bg-zinc-50 dark:bg-zinc-900/50">
+                                        <tr>
+                                            <td colSpan={3} className="px-4 py-3 text-right text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                                                Tổng cộng:
+                                            </td>
+                                            <td className="px-4 py-3 text-right text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                                                {formatCurrency(tableRows.reduce((sum, row) => sum + row.totalAmount, 0))}
+                                            </td>
+                                            <td className="px-4 py-3 text-right text-sm font-semibold text-green-600 dark:text-green-400">
+                                                {formatCurrency(tableRows.reduce((sum, row) => sum + row.totalPaid, 0))}
+                                            </td>
+                                            <td className="px-4 py-3 text-right text-sm font-semibold text-orange-600 dark:text-orange-400">
+                                                {formatCurrency(tableRows.reduce((sum, row) => sum + row.totalRemaining, 0))}
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
                         )}
-                    </table>
+                    </div>
                 </div>
             )}
 
