@@ -15,6 +15,7 @@ const STATUS_OPTIONS: { value: EnrollmentStatus; label: string }[] = [
   { value: 'active', label: 'Đang học' },
   { value: 'reserved', label: 'Bảo lưu' },
   { value: 'dropped', label: 'Nghỉ học' },
+  { value: 'mixed', label: 'Hỗn hợp' },
 ];
 
 export function EnrollmentForm({ enrollment, isOpen, onClose, onSubmit }: EnrollmentFormProps) {
@@ -39,7 +40,7 @@ export function EnrollmentForm({ enrollment, isOpen, onClose, onSubmit }: Enroll
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!startDate) {
       setError('Vui lòng chọn ngày bắt đầu');
       return;

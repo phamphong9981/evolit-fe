@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Search, Plus, Edit, Trash2, Loader2, Eye, ClipboardCheck } from 'lucide-react';
 import Link from 'next/link';
-import type { Class, CreateClassDto, UpdateClassDto, ClassStatus } from '@/types/class';
+import type { Class, CreateClassDto, UpdateClassDto, ClassStatus, ClassType } from '@/types/class';
 import { ClassForm } from '@/components/ClassForm';
 import { AttendanceModal } from '@/components/AttendanceModal';
 import {
@@ -25,6 +25,12 @@ const STATUS_COLORS: Record<ClassStatus, string> = {
   active: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
   inactive: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
   archived: 'bg-zinc-100 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-400',
+};
+
+const CLASS_TYPE_LABELS: Record<ClassType, string> = {
+  regular: 'Thường',
+  vip: 'VIP',
+  vip_1_1: 'VIP 1-1',
 };
 
 export default function ClassesPage() {
@@ -59,7 +65,7 @@ export default function ClassesPage() {
       filtered = filtered.filter(
         (cls) =>
           cls.name.toLowerCase().includes(query) ||
-          cls.subject?.name.toLowerCase().includes(query)
+          CLASS_TYPE_LABELS[cls.type]?.toLowerCase().includes(query)
       );
     }
 
@@ -114,8 +120,26 @@ export default function ClassesPage() {
     }).format(value);
   };
 
+  const formatSchedule = (schedules?: Array<{ dayOfWeek: number; startTime: string; endTime: string }>) => {
+    if (!schedules || schedules.length === 0) {
+      return [];
+    }
+
+    const dayNames = ['CN', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'];
+
+    // Format time (assume format is HH:mm:ss or HH:mm)
+    const formatTime = (time: string) => {
+      return time.substring(0, 5); // Get HH:mm from HH:mm:ss or HH:mm
+    };
+
+    return schedules.map((schedule) => {
+      const dayName = dayNames[schedule.dayOfWeek] || `Thứ ${schedule.dayOfWeek + 1}`;
+      return `${dayName} (${formatTime(schedule.startTime)} - ${formatTime(schedule.endTime)})`;
+    });
+  };
+
   return (
-    <div className="mx-auto min-h-screen max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="mx-auto min-h-screen max-w-7xl px-2 py-8 sm:px-3 lg:px-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="mb-2 text-4xl font-bold text-zinc-900 dark:text-zinc-50">
@@ -141,7 +165,7 @@ export default function ClassesPage() {
           <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-zinc-400" />
           <input
             type="text"
-            placeholder="Tìm kiếm theo tên lớp hoặc môn học..."
+            placeholder="Tìm kiếm theo tên lớp hoặc loại lớp..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-lg border border-zinc-200 bg-white py-3 pl-10 pr-4 text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-200 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder-zinc-500 dark:focus:border-zinc-600 dark:focus:ring-zinc-800"
@@ -154,11 +178,10 @@ export default function ClassesPage() {
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                statusFilter === status
-                  ? 'bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900'
-                  : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
-              }`}
+              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${statusFilter === status
+                ? 'bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-900'
+                : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700'
+                }`}
             >
               {status === 'all' ? 'Tất cả' : STATUS_LABELS[status]}
             </button>
@@ -190,10 +213,13 @@ export default function ClassesPage() {
                     Tên lớp
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Môn học
+                    Loại lớp
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                     Học phí
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    Lịch học
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                     Trạng thái
@@ -216,10 +242,19 @@ export default function ClassesPage() {
                       {classItem.name}
                     </td>
                     <td className="px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400">
-                      {classItem.subject?.name || '-'}
+                      {CLASS_TYPE_LABELS[classItem.type] || classItem.type}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400">
                       {formatCurrency(classItem.baseTuitionFee)}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-zinc-600 dark:text-zinc-400">
+                      <div className="max-w-xs">
+                        {formatSchedule(classItem.schedules)?.map((schedule: string) => (
+                          <div key={schedule}>
+                            {schedule}
+                          </div>
+                        ))}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <span

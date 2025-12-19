@@ -20,6 +20,7 @@ const STATUS_OPTIONS: { value: EnrollmentStatus; label: string }[] = [
   { value: 'active', label: 'Đang học' },
   { value: 'reserved', label: 'Bảo lưu' },
   { value: 'dropped', label: 'Nghỉ học' },
+  { value: 'mixed', label: 'Hỗn hợp' },
 ];
 
 export function EnrollmentModal({
@@ -193,11 +194,10 @@ export function EnrollmentModal({
                 availableStudents.map((student) => (
                   <label
                     key={student.id}
-                    className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${
-                      selectedStudentId === student.id
+                    className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${selectedStudentId === student.id
                         ? 'border-zinc-900 bg-zinc-100 dark:border-zinc-50 dark:bg-zinc-800'
                         : 'border-zinc-200 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800'
-                    }`}
+                      }`}
                   >
                     <input
                       type="radio"

@@ -1,7 +1,7 @@
 import type { Student } from './student';
 import type { Class } from './class';
 
-export type EnrollmentStatus = 'active' | 'reserved' | 'dropped';
+export type EnrollmentStatus = 'active' | 'reserved' | 'dropped' | 'mixed';
 
 export interface Enrollment {
   id: number;

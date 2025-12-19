@@ -33,12 +33,14 @@ const ENROLLMENT_STATUS_LABELS: Record<string, string> = {
   active: 'Đang học',
   reserved: 'Bảo lưu',
   dropped: 'Nghỉ học',
+  mixed: 'Hỗn hợp',
 };
 
 const ENROLLMENT_STATUS_COLORS: Record<string, string> = {
   active: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
   reserved: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
   dropped: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
+  mixed: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400',
 };
 
 export default function ClassDetailPage() {
