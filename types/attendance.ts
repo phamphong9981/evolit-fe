@@ -1,7 +1,15 @@
 import type { Student } from './student';
 import type { Class } from './class';
 
-export type AttendanceStatus = 'PRESENT' | 'ABSENT_WITH_PERMISSION' | 'ABSENT_NO_PERMISSION' | 'LATE' | 'DRAFT';
+export type AttendanceStatus = 
+  | 'ON_TIME' 
+  | 'LATE_LESS_10_MINUTES' 
+  | 'LATE_MORE_10_MINUTES' 
+  | 'ABSENT_WITH_PERMISSION' 
+  | 'ABSENT_NO_PERMISSION' 
+  | 'ABSENT_MIXED' 
+  | 'MAKEUP' 
+  | 'DRAFT';
 
 export interface Attendance {
   id: number;
