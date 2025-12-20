@@ -7,6 +7,8 @@ import { tuitionPeriodsApi } from './tuition-periods';
 import { ordersApi } from './orders';
 import { billingApi } from './billing';
 import { transactionsApi } from './transactions';
+import { reconcileApi } from './reconcile';
+import { statisticsApi } from './statistics';
 
 /**
  * Unified API object that exports all API modules
@@ -39,8 +41,14 @@ export const api = {
 
   // Transactions
   ...transactionsApi,
+
+  // Reconcile
+  ...reconcileApi,
+
+  // Statistics
+  ...statisticsApi,
 };
 
 // Also export individual API modules for more granular imports
-export { productsApi, studentsApi, classesApi, enrollmentsApi, attendancesApi, tuitionPeriodsApi, ordersApi, billingApi, transactionsApi };
+export { productsApi, studentsApi, classesApi, enrollmentsApi, attendancesApi, tuitionPeriodsApi, ordersApi, billingApi, transactionsApi, reconcileApi, statisticsApi };
 

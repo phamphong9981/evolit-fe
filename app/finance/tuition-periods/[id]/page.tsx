@@ -182,6 +182,8 @@ export default function TuitionPeriodDetailPage() {
             <TuitionPeriodTabs
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
+                periodId={periodId}
+                periodStatus={stats.status}
                 orders={orders}
                 isLoadingOrders={isLoadingOrders}
                 orderStatusFilter={orderStatusFilter}

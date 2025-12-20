@@ -38,28 +38,28 @@ export function TuitionPeriodActionBar({
         );
     }
 
-    if (status === 'ACTIVE') {
-        return (
-            <div className="mb-6 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h3 className="font-medium text-zinc-900 dark:text-zinc-50">Chốt sổ & Đối soát</h3>
-                        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                            Xem lại điểm danh và chốt sổ kỳ học phí này
-                        </p>
-                    </div>
-                    <button
-                        onClick={onClosePeriod}
-                        disabled={isClosing}
-                        className="flex items-center gap-2 rounded-lg bg-green-600 px-6 py-3 font-medium text-white hover:bg-green-700 disabled:opacity-50"
-                    >
-                        <Lock className="h-5 w-5" />
-                        {isClosing ? 'Đang xử lý...' : 'CHỐT SỔ & ĐỐI SOÁT'}
-                    </button>
-                </div>
-            </div>
-        );
-    }
+    // if (status === 'ACTIVE') {
+    //     return (
+    //         <div className="mb-6 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+    //             <div className="flex items-center justify-between">
+    //                 <div>
+    //                     <h3 className="font-medium text-zinc-900 dark:text-zinc-50">Chốt sổ & Đối soát</h3>
+    //                     <p className="text-sm text-zinc-600 dark:text-zinc-400">
+    //                         Xem lại điểm danh và chốt sổ kỳ học phí này
+    //                     </p>
+    //                 </div>
+    //                 <button
+    //                     onClick={onClosePeriod}
+    //                     disabled={isClosing}
+    //                     className="flex items-center gap-2 rounded-lg bg-green-600 px-6 py-3 font-medium text-white hover:bg-green-700 disabled:opacity-50"
+    //                 >
+    //                     <Lock className="h-5 w-5" />
+    //                     {isClosing ? 'Đang xử lý...' : 'CHỐT SỔ & ĐỐI SOÁT'}
+    //                 </button>
+    //             </div>
+    //         </div>
+    //     );
+    // }
 
     if (status === 'CLOSED') {
         return (

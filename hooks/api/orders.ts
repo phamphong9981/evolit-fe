@@ -24,7 +24,7 @@ export const ordersApi = {
   getOrdersByPeriod: async (periodId: number): Promise<Order[]> => {
     // This endpoint might need to be implemented on backend
     // For now, we'll filter client-side or use a different endpoint
-    const response = await fetch(`${API_BASE_URL}/orders?periodId=${periodId}`);
+    const response = await fetch(`${API_BASE_URL}/orders?tuitionPeriodId=${periodId}`);
     if (!response.ok) throw new Error('Failed to fetch orders by period');
     return response.json();
   },

@@ -2,13 +2,17 @@
 
 import { Receipt, FileCheck, Clock } from 'lucide-react';
 import { OrdersTab } from './OrdersTab';
+import { ReconciliationTab } from './ReconciliationTab';
 import type { Order } from '@/types/order';
+import type { TuitionPeriodStatus } from '@/types/tuition-period';
 
 type TabType = 'orders' | 'reconciliation' | 'audit';
 
 interface TuitionPeriodTabsProps {
     activeTab: TabType;
     onTabChange: (tab: TabType) => void;
+    periodId: number;
+    periodStatus: TuitionPeriodStatus;
     orders: Order[];
     isLoadingOrders: boolean;
     orderStatusFilter: 'all' | 'pending' | 'partial' | 'paid';
@@ -25,6 +29,8 @@ interface TuitionPeriodTabsProps {
 export function TuitionPeriodTabs({
     activeTab,
     onTabChange,
+    periodId,
+    periodStatus,
     orders,
     isLoadingOrders,
     orderStatusFilter,
@@ -100,13 +106,11 @@ export function TuitionPeriodTabs({
                 )}
 
                 {activeTab === 'reconciliation' && (
-                    <div className="py-12 text-center text-zinc-600 dark:text-zinc-400">
-                        <FileCheck className="mx-auto mb-4 h-12 w-12 text-zinc-400" />
-                        <p>Bảng kê đối soát đang được phát triển</p>
-                        <p className="mt-2 text-sm">
-                            Hiển thị danh sách học sinh có phát sinh tiền hoàn (nghỉ có phép)
-                        </p>
-                    </div>
+                    <ReconciliationTab
+                        periodId={periodId}
+                        periodStatus={periodStatus}
+                        formatCurrency={formatCurrency}
+                    />
                 )}
 
                 {activeTab === 'audit' && (
